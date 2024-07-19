@@ -6,6 +6,7 @@ import (
 	"mysql-distributed-lock/config"
 	"mysql-distributed-lock/db"
 	"mysql-distributed-lock/model"
+	"mysql-distributed-lock/utils"
 	"time"
 )
 
@@ -13,15 +14,18 @@ func main() {
 	config.InitConfig()
 	db.InitTDB()
 	//_ = db.Mysql.AutoMigrate(&model.BridgeOrder{})
-	//InsertOrder()
-	log.Println(OrderWriteLock())
+	//for i := 0; i < 6; i++ {
+	//	InsertOrder()
+	//}
+	OrderWriteLock()
 	log.Println("锁表成功")
 	log.Println(FailedTask())
-	log.Println(OrderWriteUnLock())
+	OrderWriteUnLock()
 	log.Println("锁释放成功")
 }
 
 func FailedTask() error {
+	log.Println("耗时任务开始")
 	orders, err := FindFailedOrder()
 	if err != nil {
 		return err
@@ -31,13 +35,14 @@ func FailedTask() error {
 		fmt.Println(o.Hash)
 		time.Sleep(time.Second * 5)
 	}
+	log.Println("耗时任务结束")
 	return nil
 }
 
 func InsertOrder() {
 	db.Mysql.Model(model.BridgeOrder{}).Create(&model.BridgeOrder{
 		Data:       nil,
-		Hash:       "0xaaaaaaa",
+		Hash:       utils.UniqueId(),
 		VoteStatus: false,
 		Status:     false,
 	})
@@ -54,12 +59,18 @@ func FindFailedOrder() ([]model.BridgeOrder, error) {
 	return orders, nil
 }
 
-func OrderWriteLock() error {
-	log.Println("锁表")
-	return db.Mysql.Exec("lock tables bridge_orders write").Debug().Error
+func OrderWriteLock() {
+	log.Println("锁表...")
+	err := db.Mysql.Exec("lock tables bridge_orders write").Debug().Error
+	if err != nil {
+		log.Println(err)
+	}
 }
 
-func OrderWriteUnLock() error {
-	log.Println("释放表锁")
-	return db.Mysql.Exec("unlock tables").Debug().Error
+func OrderWriteUnLock() {
+	log.Println("释放表锁...")
+	err := db.Mysql.Exec("unlock tables").Debug().Error
+	if err != nil {
+		log.Println(err)
+	}
 }
