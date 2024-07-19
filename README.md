@@ -1,2 +1,3 @@
 # mysql-distributed-lock
-Distributed Lock Based on MySQL
+
+- 使用表的写锁，实现的分布式锁
