@@ -19,24 +19,23 @@ func main() {
 	//}
 	OrderWriteLock()
 	log.Println("锁表成功")
-	log.Println(FailedTask())
+	FailedTask()
 	OrderWriteUnLock()
 	log.Println("锁释放成功")
 }
 
-func FailedTask() error {
+func FailedTask() {
 	log.Println("耗时任务开始")
 	orders, err := FindFailedOrder()
 	if err != nil {
-		return err
+		return
 	}
 	for _, order := range orders {
 		o := order
 		fmt.Println(o.Hash)
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 10)
 	}
 	log.Println("耗时任务结束")
-	return nil
 }
 
 func InsertOrder() {
